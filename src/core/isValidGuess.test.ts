@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import isValidGuess from './isValidGuess';
+import * as validatorModule from './createDigitValidator';
 
 describe('isValidGuess', () => {
   it('Возвращает true для корректной попытки', () => {
@@ -62,5 +63,11 @@ describe('isValidGuess', () => {
     const guess = ['1', '2', '3', '4'];
     isValidGuess(guess, 4, 10);
     expect(guess).toEqual(['1', '2', '3', '4']);
+  });
+  it('Использует createDigitValidator', () => {
+    const spy = vi.spyOn(validatorModule, 'default');
+    isValidGuess(['1', '2', '3', '4'], 4, 10);
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
