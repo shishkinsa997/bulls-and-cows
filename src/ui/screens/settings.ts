@@ -2,6 +2,8 @@ import { el } from '../dom';
 import countPossibleSecrets from '../../core/countPossibleSecrets';
 import generateSecret from '../../core/generateSecret';
 import type { GameState, Store } from '../../types/types';
+import { createIcon } from '../icons';
+import { Play, Sparkles } from 'lucide';
 
 const bases = [
   { value: 2, label: 'Binary (bin)' },
@@ -14,6 +16,19 @@ const lengths = [2, 3, 4, 5, 6] as const;
 
 export const renderSettings = (root: HTMLElement, state: GameState, store: Store): void => {
   const { base, length } = state.settings;
+  const heading = el('h1', { className: 'screen-heading' }, 'Bulls & Cows');
+  heading.prepend(createIcon(Sparkles));
+
+  const startButton = el(
+    'button',
+    {
+      type: 'submit',
+      className: 'button button--primary inline-flex items-center justify-center gap-2',
+    },
+    'Start game',
+  );
+  startButton.prepend(createIcon(Play));
+
   const form = el(
     'form',
     { className: 'settings-form' },
@@ -21,6 +36,7 @@ export const renderSettings = (root: HTMLElement, state: GameState, store: Store
     el(
       'select',
       {
+        className: 'settings-control',
         id: 'base',
         name: 'base',
         onchange: (event: Event) => {
@@ -57,6 +73,7 @@ export const renderSettings = (root: HTMLElement, state: GameState, store: Store
     el(
       'select',
       {
+        className: 'settings-control',
         id: 'length',
         name: 'length',
         onchange: (event: Event) => {
@@ -88,7 +105,7 @@ export const renderSettings = (root: HTMLElement, state: GameState, store: Store
       { className: 'possible-secrets' },
       `Possible secrets: ${countPossibleSecrets(length, base)}`,
     ),
-    el('button', { type: 'submit' }, 'Start game'),
+    startButton,
   );
 
   form.addEventListener('submit', (event) => {
@@ -104,5 +121,10 @@ export const renderSettings = (root: HTMLElement, state: GameState, store: Store
     }));
   });
 
-  root.append(el('h1', { textContent: 'Bulls and Cows' }), form);
+  const subtitle = el(
+    'p',
+    { className: 'screen-subtitle' },
+    'Choose your number system and secret length, then crack the code.',
+  );
+  root.append(el('section', { className: 'screen settings-screen' }, heading, subtitle, form));
 };
