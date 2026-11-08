@@ -23,3 +23,9 @@ export type GameState = {
 };
 
 export type Listener = (state: GameState) => void;
+
+export type Store = {
+  getState: () => GameState;
+  setState: (updater: (prev: GameState) => GameState) => void;
+  subscribe: (listener: Listener) => () => void;
+};
