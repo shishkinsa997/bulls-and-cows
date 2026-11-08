@@ -23,7 +23,7 @@ export const renderSettings = (root: HTMLElement, state: GameState, store: Store
     'button',
     {
       type: 'submit',
-      className: 'button button--primary inline-flex items-center justify-center gap-2',
+      className: 'button button--primary',
     },
     'Start game',
   );

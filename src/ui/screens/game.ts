@@ -4,7 +4,7 @@ import isValidGuess from '../../core/isValidGuess';
 import type { GameState, Store } from '../../types/types';
 import { createIcon } from '../icons';
 import { el } from '../dom';
-import { ArrowLeft, Clock3, Hash, Medal, Send, Sparkles, Target } from 'lucide';
+import { ArrowLeft, Clock3, Hash, History, Medal, Send, Sparkles, Target } from 'lucide';
 
 let timerInterval: number | undefined;
 
@@ -20,7 +20,12 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
 
   const { length, base } = state.settings;
   const isValidDigit = createDigitValidator(base);
-  const message = el('p', { className: 'guess-message', role: 'status', 'aria-live': 'polite' });
+  const message = el('p', {
+    className: 'guess-message',
+    id: 'guess-message',
+    role: 'status',
+    'aria-live': 'polite',
+  });
   const guessCells = Array.from({ length }, (_, index) =>
     el('input', {
       className: 'guess-input',
@@ -35,7 +40,12 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
   );
   const cellsContainer = el(
     'div',
-    { className: 'guess-cells', role: 'group', 'aria-label': `Enter your ${length}-digit guess` },
+    {
+      className: 'guess-cells',
+      role: 'group',
+      'aria-label': `Enter your ${length}-digit guess`,
+      style: { gridTemplateColumns: `repeat(${length}, var(--guess-cell-size))` },
+    },
     ...guessCells,
   );
   const guessHelp = el(
@@ -119,17 +129,23 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
   const timer = el('output', { className: 'game-timer' });
   const guessButton = el(
     'button',
-    { type: 'submit', className: 'button button--primary', disabled: state.status === 'won' },
+    {
+      type: 'submit',
+      className: 'button button--primary',
+      disabled: state.status === 'won',
+    },
     'Guess',
   );
   guessButton.prepend(createIcon(Send));
   const form = el(
     'form',
-    { className: 'guess-form' },
+    {
+      className: 'guess-form',
+    },
     el('label', {}, 'Your guess'),
     cellsContainer,
-    guessHelp,
     guessButton,
+    guessHelp,
     message,
   );
   const historyList = el(
@@ -148,7 +164,9 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
 
       return el(
         'li',
-        { className: 'history-item' },
+        {
+          className: 'history-item',
+        },
         el('span', { className: 'history-item__index' }, `#${guessIndex}`),
         el('span', { className: 'history-item__guess' }, attempt.guess.join('')),
         bulls,
@@ -268,12 +286,10 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
     ),
   );
 
-  const historyLabel = el('span', {}, 'Guess history');
-  historyLabel.prepend(createIcon(Sparkles));
   const historyTitle = el(
     'h2',
     { className: 'history-heading' },
-    historyLabel,
+    'Guess history',
     el(
       'span',
       { className: 'history-count' },
@@ -281,10 +297,9 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
     ),
   );
 
-  const historyContent =
-    state.history.length > 0
-      ? historyList
-      : el('p', { className: 'history-empty' }, 'Your guesses will appear here.');
+  const historyEmpty = el('p', { className: 'history-empty' }, 'Your guesses will appear here.');
+  historyEmpty.prepend(createIcon(History));
+  const historyContent = state.history.length > 0 ? historyList : historyEmpty;
 
   const result =
     state.status === 'won'
@@ -293,8 +308,8 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
           { className: 'game-result' },
           `Solved in ${state.attempts} attempts and ${formatDuration(elapsed)}. Well played!`,
         )
-      : null;
-  if (result) result.prepend(createIcon(Medal));
+      : el('div', { className: 'game-result-placeholder', 'aria-hidden': 'true' });
+  if (state.status === 'won') result.prepend(createIcon(Medal));
 
   root.append(
     el(
@@ -304,8 +319,12 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
       stats,
       result,
       form,
-      historyTitle,
-      historyContent,
+      el(
+        'section',
+        { className: 'history-panel', 'aria-label': 'Guess history' },
+        historyTitle,
+        historyContent,
+      ),
     ),
   );
 
