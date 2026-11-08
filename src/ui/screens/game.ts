@@ -2,7 +2,9 @@ import createDigitValidator from '../../core/createDigitValidator';
 import evaluateGuess from '../../core/evaluateGuess';
 import isValidGuess from '../../core/isValidGuess';
 import type { GameState, Store } from '../../types/types';
+import { createIcon } from '../icons';
 import { el } from '../dom';
+import { ArrowLeft, Clock3, Hash, Medal, Send, Sparkles, Target } from 'lucide';
 
 let timerInterval: number | undefined;
 
@@ -17,63 +19,153 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
   if (timerInterval !== undefined) window.clearInterval(timerInterval);
 
   const { length, base } = state.settings;
-  const guessInput = el('input', {
-    id: 'guess',
-    name: 'guess',
-    type: 'text',
-    inputMode: 'text',
-    autoComplete: 'off',
-    maxLength: length,
-    required: true,
-    'aria-label': `Enter ${length} unique digits`,
+  const isValidDigit = createDigitValidator(base);
+  const message = el('p', { className: 'guess-message', role: 'status', 'aria-live': 'polite' });
+  const guessCells = Array.from({ length }, (_, index) =>
+    el('input', {
+      className: 'guess-input',
+      type: 'text',
+      inputMode: base === 16 ? 'text' : 'numeric',
+      autoComplete: 'off',
+      maxLength: 1,
+      disabled: state.status === 'won',
+      'aria-label': `Digit ${index + 1} of ${length}`,
+      'aria-describedby': 'guess-help guess-message',
+    }),
+  );
+  const cellsContainer = el(
+    'div',
+    { className: 'guess-cells', role: 'group', 'aria-label': `Enter your ${length}-digit guess` },
+    ...guessCells,
+  );
+  const guessHelp = el(
+    'span',
+    { id: 'guess-help', className: 'guess-help' },
+    `${length} different digits`,
+  );
+
+  guessCells.forEach((cell, index) => {
+    cell.addEventListener('input', () => {
+      const value = cell.value.slice(-1);
+      const duplicate = guessCells.some(
+        (other, otherIndex) =>
+          otherIndex !== index && other.value.toLowerCase() === value.toLowerCase(),
+      );
+
+      if (value && (!isValidDigit(value) || duplicate)) {
+        cell.value = '';
+        message.textContent = duplicate
+          ? 'Each digit can only be used once.'
+          : `Use digits valid for base ${base}.`;
+        return;
+      }
+
+      cell.value = value;
+      message.textContent = '';
+      if (value && index < guessCells.length - 1) guessCells[index + 1]?.focus();
+    });
+
+    cell.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Backspace' && !cell.value && index > 0) {
+        guessCells[index - 1]?.focus();
+        return;
+      }
+
+      if (event.key === 'ArrowLeft' && index > 0) {
+        event.preventDefault();
+        guessCells[index - 1]?.focus();
+      } else if (event.key === 'ArrowRight' && index < guessCells.length - 1) {
+        event.preventDefault();
+        guessCells[index + 1]?.focus();
+      }
+    });
+
+    cell.addEventListener('paste', (event: ClipboardEvent) => {
+      event.preventDefault();
+      const pastedDigits = Array.from(event.clipboardData?.getData('text') ?? '');
+      const occupied = new Set(
+        guessCells
+          .slice(0, index)
+          .map((input) => input.value.toLowerCase())
+          .filter(Boolean),
+      );
+      let nextIndex = index;
+      guessCells.slice(index).forEach((input) => {
+        input.value = '';
+      });
+
+      pastedDigits.forEach((digit) => {
+        const normalizedDigit = digit.toLowerCase();
+        if (
+          nextIndex >= guessCells.length ||
+          !isValidDigit(digit) ||
+          occupied.has(normalizedDigit)
+        ) {
+          return;
+        }
+
+        const target = guessCells[nextIndex];
+        if (!target) return;
+        target.value = digit;
+        occupied.add(normalizedDigit);
+        nextIndex += 1;
+      });
+
+      message.textContent = '';
+      guessCells[Math.min(nextIndex, guessCells.length - 1)]?.focus();
+    });
   });
-  const message = el('p', { role: 'status', 'aria-live': 'polite' });
+
   const timer = el('output', { className: 'game-timer' });
+  const guessButton = el(
+    'button',
+    { type: 'submit', className: 'button button--primary', disabled: state.status === 'won' },
+    'Guess',
+  );
+  guessButton.prepend(createIcon(Send));
   const form = el(
     'form',
     { className: 'guess-form' },
-    el('label', { htmlFor: 'guess' }, `Your guess (${length} unique characters)`),
-    guessInput,
-    el('button', { type: 'submit', disabled: state.status === 'won' }, 'Guess'),
+    el('label', {}, 'Your guess'),
+    cellsContainer,
+    guessHelp,
+    guessButton,
     message,
   );
   const historyList = el(
     'ol',
-    { className: 'guess-history' },
-    ...state.history.map((attempt, index) =>
-      el(
+    { className: 'guess-history', 'aria-label': 'Submitted guesses' },
+    ...[...state.history].reverse().map((attempt, index) => {
+      const guessIndex = state.history.length - index;
+      const bulls = el('span', { className: 'feedback-pill' }, `Bulls ${attempt.bulls}`);
+      bulls.prepend(createIcon(Target));
+      const cows = el(
+        'span',
+        { className: 'feedback-pill feedback-pill--cows' },
+        `Cows ${attempt.cows}`,
+      );
+      cows.prepend(createIcon(Sparkles));
+
+      return el(
         'li',
-        {},
-        `#${index + 1}: ${attempt.guess.join('')} — Bulls: ${attempt.bulls}, Cows: ${attempt.cows}`,
-      ),
-    ),
+        { className: 'history-item' },
+        el('span', { className: 'history-item__index' }, `#${guessIndex}`),
+        el('span', { className: 'history-item__guess' }, attempt.guess.join('')),
+        bulls,
+        cows,
+      );
+    }),
   );
   const elapsed = state.startTime === null ? 0 : (state.endTime ?? Date.now()) - state.startTime;
 
   timer.textContent = formatDuration(elapsed);
 
-  guessInput.addEventListener('input', () => {
-    const isValidDigit = createDigitValidator(base);
-    const usedDigits = new Set<string>();
-    const filteredValue = Array.from(guessInput.value)
-      .filter((char) => {
-        const digit = char.toLowerCase();
-        if (!isValidDigit(char) || usedDigits.has(digit)) return false;
-        usedDigits.add(digit);
-        return true;
-      })
-      .slice(0, length)
-      .join('');
-
-    if (filteredValue !== guessInput.value) guessInput.value = filteredValue;
-    message.textContent = '';
-  });
-
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const guess = Array.from(guessInput.value);
+    const guess = guessCells.map((cell) => cell.value);
     if (!isValidGuess(guess, length, base)) {
       message.textContent = `Enter exactly ${length} unique digits valid for base ${base}.`;
+      guessCells.find((cell) => !cell.value)?.focus();
       return;
     }
 
@@ -108,6 +200,7 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
     'button',
     {
       type: 'button',
+      className: 'button button--secondary',
       onclick: () => {
         if (timerInterval !== undefined) window.clearInterval(timerInterval);
         store.setState((previous) => ({
@@ -123,24 +216,97 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
     },
     'New game',
   );
+  newGameButton.prepend(createIcon(ArrowLeft));
+
+  const heading = el(
+    'h1',
+    { className: 'screen-heading' },
+    state.status === 'won' ? 'Code cracked!' : 'Crack the code',
+  );
+  heading.prepend(createIcon(state.status === 'won' ? Medal : Hash));
+
+  const gameHeader = el(
+    'header',
+    { className: 'game-header' },
+    el(
+      'div',
+      {},
+      heading,
+      el('p', { className: 'game-meta' }, `${length} unique digits · base ${base}`),
+    ),
+    newGameButton,
+  );
+
+  const timerIcon = el('span', { className: 'stat-card__icon' });
+  timerIcon.append(createIcon(Clock3));
+  const attemptsIcon = el('span', { className: 'stat-card__icon' });
+  attemptsIcon.append(createIcon(Target));
+  const stats = el(
+    'div',
+    { className: 'game-stats' },
+    el(
+      'div',
+      { className: 'stat-card' },
+      timerIcon,
+      el(
+        'div',
+        {},
+        el('span', { className: 'stat-card__label' }, 'Time'),
+        el('span', { className: 'stat-card__value' }, timer),
+      ),
+    ),
+    el(
+      'div',
+      { className: 'stat-card' },
+      attemptsIcon,
+      el(
+        'div',
+        {},
+        el('span', { className: 'stat-card__label' }, 'Attempts'),
+        el('span', { className: 'stat-card__value' }, state.attempts),
+      ),
+    ),
+  );
+
+  const historyLabel = el('span', {}, 'Guess history');
+  historyLabel.prepend(createIcon(Sparkles));
+  const historyTitle = el(
+    'h2',
+    { className: 'history-heading' },
+    historyLabel,
+    el(
+      'span',
+      { className: 'history-count' },
+      `${state.history.length} ${state.history.length === 1 ? 'guess' : 'guesses'}`,
+    ),
+  );
+
+  const historyContent =
+    state.history.length > 0
+      ? historyList
+      : el('p', { className: 'history-empty' }, 'Your guesses will appear here.');
+
+  const result =
+    state.status === 'won'
+      ? el(
+          'p',
+          { className: 'game-result' },
+          `Solved in ${state.attempts} attempts and ${formatDuration(elapsed)}. Well played!`,
+        )
+      : null;
+  if (result) result.prepend(createIcon(Medal));
 
   root.append(
-    el('h1', { textContent: state.status === 'won' ? 'You won!' : 'Bulls and Cows' }),
-    el('p', {}, `Length: ${length}; base: ${base}`),
-    el('p', {}, 'Time: ', timer),
-    ...(state.status === 'won'
-      ? [
-          el(
-            'p',
-            { className: 'game-result' },
-            `Solved in ${state.attempts} attempts and ${formatDuration(elapsed)}.`,
-          ),
-        ]
-      : []),
-    form,
-    el('h2', { textContent: 'Guess history' }),
-    historyList,
-    newGameButton,
+    el(
+      'section',
+      { className: 'screen game-screen' },
+      gameHeader,
+      stats,
+      result,
+      form,
+      historyTitle,
+      historyContent,
+    ),
   );
 
   if (state.status === 'playing' && state.startTime !== null) {
