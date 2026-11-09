@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #f3edff;
+  --color-muted: #a99abf;
+  --color-surface: #1b1426;
+  --color-surface-raised: #261d35;
+  --color-accent: #bd9cff;
+  --color-accent-strong: #a879f5;
+  --color-highlight: #ed9dcc;
+  --color-danger: #ff8eaa;
+  --color-background: #100b18;
+  --font-display: 'Arial Narrow', 'Segoe UI', sans-serif;
+  --font-body: 'Segoe UI', system-ui, sans-serif;
+  --radius-card: 1.25rem;
+  --radius-control: 0.7rem;
+}

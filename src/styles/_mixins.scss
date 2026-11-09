@@ -1,0 +1,87 @@
+@use 'variables' as *;
+
+@mixin focus-ring {
+  outline: 3px solid rgb($color-accent, 55%);
+  outline-offset: 3px;
+}
+
+@mixin centered-row($gap: 0.5rem, $display: flex) {
+  display: $display;
+  align-items: center;
+  gap: $gap;
+}
+
+@mixin surface($padding: $space-md) {
+  border: 1px solid $color-border;
+  border-radius: $radius-control;
+  background: rgb(255 255 255 / 3%);
+  padding: $padding;
+}
+
+@mixin card {
+  width: min(100%, 48rem);
+  border: 1px solid $color-border;
+  border-radius: $radius-card;
+  background: $color-surface;
+  box-shadow: $shadow-card;
+  padding: clamp(1.25rem, 5vw, 3rem);
+}
+
+@mixin control {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid $color-border;
+  border-radius: $radius-control;
+  background: $color-surface-raised;
+  color: $color-ink;
+  padding: 0.75rem 1rem;
+}
+
+@mixin icon($size: 1.1rem) {
+  width: $size;
+  height: $size;
+  flex: none;
+}
+
+@mixin pill($background: $color-glow, $color: $color-accent) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: $radius-pill;
+  background: $background;
+  color: $color;
+  padding: $space-xs 0.55rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+@mixin button-base {
+  @include centered-row(0.5rem, inline-flex);
+
+  min-height: 3rem;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: $radius-control;
+  font-weight: 700;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .icon {
+    @include icon;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: $bp-mobile) {
+    @content;
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
