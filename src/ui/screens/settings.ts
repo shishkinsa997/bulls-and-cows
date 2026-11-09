@@ -4,6 +4,7 @@ import generateSecret from '../../core/generateSecret';
 import type { GameState, Store } from '../../types/types';
 import { createIcon } from '../icons';
 import { Play, Sparkles } from 'lucide';
+import { renderLeaderboard } from '../leaderboard';
 
 const bases = [
   { value: 2, label: 'Binary (bin)' },
@@ -126,5 +127,14 @@ export const renderSettings = (root: HTMLElement, state: GameState, store: Store
     { className: 'screen-subtitle' },
     'Choose your number system and secret length, then crack the code.',
   );
-  root.append(el('section', { className: 'screen settings-screen' }, heading, subtitle, form));
+  root.append(
+    el(
+      'section',
+      { className: 'screen settings-screen' },
+      heading,
+      subtitle,
+      form,
+      renderLeaderboard(),
+    ),
+  );
 };

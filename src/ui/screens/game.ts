@@ -6,6 +6,7 @@ import { createIcon } from '../icons';
 import { el } from '../dom';
 import { ArrowLeft, Clock3, Hash, History, Medal, Send, Sparkles, Target } from 'lucide';
 import storage from '../../state/storage';
+import { renderLeaderboard } from '../leaderboard';
 
 let timerInterval: number | undefined;
 
@@ -331,7 +332,7 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
   root.append(
     el(
       'section',
-      { className: 'screen game-screen' },
+      { className: `screen game-screen${state.status === 'won' ? ' game-screen--won' : ''}` },
       gameHeader,
       stats,
       result,
@@ -342,6 +343,7 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
         historyTitle,
         historyContent,
       ),
+      ...(state.status === 'won' ? [renderLeaderboard()] : []),
     ),
   );
 
