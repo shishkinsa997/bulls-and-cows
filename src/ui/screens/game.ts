@@ -1,10 +1,11 @@
 import createDigitValidator from '../../core/createDigitValidator';
 import evaluateGuess from '../../core/evaluateGuess';
 import isValidGuess from '../../core/isValidGuess';
-import type { GameState, Store } from '../../types/types';
+import type { GameState, Store, RecordStore } from '../../types/types';
 import { createIcon } from '../icons';
 import { el } from '../dom';
 import { ArrowLeft, Clock3, Hash, History, Medal, Send, Sparkles, Target } from 'lucide';
+import storage from '../../state/storage';
 
 let timerInterval: number | undefined;
 
@@ -309,7 +310,23 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
           `Solved in ${state.attempts} attempts and ${formatDuration(elapsed)}. Well played!`,
         )
       : el('div', { className: 'game-result-placeholder', 'aria-hidden': 'true' });
-  if (state.status === 'won') result.prepend(createIcon(Medal));
+
+  if (state.status === 'won') {
+    result.prepend(createIcon(Medal));
+    const record = {
+      length: state.settings.length,
+      base: state.settings.base,
+      attempts: state.attempts,
+      time: elapsed,
+      date: Date.now(),
+    };
+    const records: RecordStore[] | null = storage<RecordStore[]>('records')();
+    if (!records) {
+      storage<RecordStore[]>('records')([record]);
+    } else {
+      storage<RecordStore[]>('records')([...records, record]);
+    }
+  }
 
   root.append(
     el(

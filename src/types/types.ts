@@ -29,3 +29,9 @@ export type Store = {
   setState: (updater: (prev: GameState) => GameState) => void;
   subscribe: (listener: Listener) => () => void;
 };
+
+export type RecordStore = Settings & {
+  attempts: number;
+  time: number;
+  date: number;
+};
