@@ -169,6 +169,134 @@ select:focus-visible {
   margin-top: 0.4rem;
 }
 
+.leaderboard {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  border-top: 1px solid $color-border;
+  padding-top: 1.5rem;
+}
+
+.leaderboard__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.35rem;
+  font-family: $font-display;
+  font-size: 1.35rem;
+
+  .icon {
+    @include icon(1.1rem);
+
+    color: $color-accent;
+  }
+}
+
+.leaderboard__group {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid $color-border;
+  border-radius: $radius-control;
+  background: $color-surface-raised;
+}
+
+.leaderboard__base {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::after {
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    transform: rotate(45deg);
+    border-right: 1.5px solid $color-muted;
+    border-bottom: 1.5px solid $color-muted;
+    content: '';
+    transition: transform $transition;
+  }
+
+  &:hover {
+    background: rgb(189 156 255 / 5%);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.leaderboard__group[open] > .leaderboard__base::after {
+  transform: rotate(225deg);
+}
+
+.leaderboard__count {
+  margin-left: auto;
+  border-radius: $radius-pill;
+  background: $color-glow;
+  padding: 0.15rem 0.5rem;
+  color: $color-accent;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard__content {
+  border-top: 1px solid $color-border;
+  padding: 0.25rem 0.8rem 0.65rem;
+}
+
+.leaderboard__table-scroll {
+  overflow-x: auto;
+}
+
+.leaderboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  white-space: nowrap;
+
+  th,
+  td {
+    border-bottom: 1px solid $color-border;
+    padding: 0.5rem 0.4rem;
+  }
+
+  th {
+    color: $color-muted;
+    font-size: 0.68rem;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.leaderboard__rank {
+  color: $color-accent;
+  font-weight: 700;
+}
+
+.leaderboard__empty {
+  color: $color-muted;
+  text-align: center;
+}
+
 .game-screen {
   display: grid;
   grid-template:
@@ -178,6 +306,19 @@ select:focus-visible {
     'guess history' 24rem / minmax(0, 1fr) minmax(19rem, 0.85fr);
   gap: 0 1.5rem;
   max-width: 64rem;
+}
+
+.game-screen--won {
+  grid-template:
+    'header header' auto
+    'stats stats' auto
+    'result result' 4.5rem
+    'guess history' 24rem
+    'records records' auto / minmax(0, 1fr) minmax(19rem, 0.85fr);
+
+  > .leaderboard {
+    grid-area: records;
+  }
 }
 
 .game-header {
@@ -445,6 +586,16 @@ select:focus-visible {
       'guess' auto
       'history' 24rem / minmax(0, 1fr);
     gap: 0;
+  }
+
+  .game-screen--won {
+    grid-template:
+      'header' auto
+      'stats' auto
+      'result' 4.5rem
+      'guess' auto
+      'history' 24rem
+      'records' auto / minmax(0, 1fr);
   }
 
   .game-header {
