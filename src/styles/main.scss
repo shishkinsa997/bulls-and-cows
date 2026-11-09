@@ -419,6 +419,7 @@ select:focus-visible {
   display: grid;
   align-content: start;
   gap: 0.85rem;
+  min-width: 0;
   margin: 0;
   border-color: $color-border;
   background: $color-surface-raised;
@@ -438,15 +439,17 @@ select:focus-visible {
   --guess-cell-size: 3rem;
 
   display: grid;
+  width: fit-content;
+  max-width: 100%;
   justify-self: center;
   gap: 0.5rem;
 }
 
 .guess-input {
-  width: var(--guess-cell-size);
-  height: var(--guess-cell-size);
-  min-width: var(--guess-cell-size);
-  min-height: var(--guess-cell-size);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
   border-radius: $radius-control;
   background: $color-surface;
   color: $color-accent;

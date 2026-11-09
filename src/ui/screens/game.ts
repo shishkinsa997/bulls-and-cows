@@ -46,7 +46,9 @@ export const renderGame = (root: HTMLElement, state: GameState, store: Store): v
       className: 'guess-cells',
       role: 'group',
       'aria-label': `Enter your ${length}-digit guess`,
-      style: { gridTemplateColumns: `repeat(${length}, var(--guess-cell-size))` },
+      style: {
+        gridTemplateColumns: `repeat(${length}, minmax(0, var(--guess-cell-size)))`,
+      },
     },
     ...guessCells,
   );
